@@ -41,7 +41,7 @@ class AccountData:
         self.status_connect = CONNECTION_STATES["NONE_CONNECTION"]
         self.account_info = {}
         self.retries = 3
-        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}Resetting account {self.index}{Fore.RESET}")
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}正在重置账户 {self.index}{Fore.RESET}")
 
 # Activate accounts and update their status
 async def activate_accounts(accounts) -> None:
@@ -53,24 +53,24 @@ async def activate_accounts(accounts) -> None:
 
     for account, response in zip(accounts, responses):
         if isinstance(response, Exception):
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error activating account {account.index}: {response}{Fore.RESET}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}激活账户 {account.index} 时出错: {response}{Fore.RESET}")
             account.status_connect = CONNECTION_STATES["NONE_CONNECTION"]
             continue
 
         if response and response.get("code") == 5 and "already activated" in response.get("msg", "").lower():
             account.status_connect = CONNECTION_STATES["CONNECTED"]
-            logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Account {account.index} is already activated{Fore.RESET}")
+            logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}账户 {account.index} 已激活{Fore.RESET}")
 
         elif response and response.get("success") and response.get("data") is True:
             account.status_connect = CONNECTION_STATES["CONNECTED"]
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Account {account.index} activated successfully{Fore.RESET}")
+            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}账户 {account.index} 激活成功{Fore.RESET}")
 
 # Synchronize account data by fetching profile and earning information
 async def process_account(account):
     try:
         await get_profile_info(account)
     except Exception as e:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error processing account {account.index}: {e}{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}处理账户 {account.index} 时出错: {e}{Fore.RESET}")
 
 # Handles resource cleanup during interruptions
 async def clean_up_resources():
@@ -89,7 +89,7 @@ async def clean_up_resources():
     except asyncio.CancelledError:
         pass
 
-    logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}Cleanup completed{Fore.RESET}")
+    logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}清理完成{Fore.RESET}")
 
 # Main function to manage the application flow
 async def process():
@@ -100,7 +100,7 @@ async def process():
         proxies = get_proxy_choice()
         tokens = await load_tokens()
 
-        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}Proceeding with{'out proxies...' if not proxies else ' proxies...'}{Fore.RESET}")
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {'正在使用代理...' if proxies else '未使用代理...'}")
 
         token_proxy_pairs = assign_proxies(tokens, proxies)
         accounts = [AccountData(token, index, proxy) for index, (token, proxy) in enumerate(token_proxy_pairs, start=1)]
@@ -112,7 +112,7 @@ async def process():
             try:
                 if DAILY_CLAIM:
                     processed_tokens.clear()
-                    logger.info(f"{Fore.CYAN}00{Fore.RESET} - Loading account details, checking rewards, and claiming. Please wait...")
+                    logger.info(f"{Fore.CYAN}00{Fore.RESET} - 正在加载账户详情，检查奖励并领取。请稍候...")
                     await asyncio.sleep(3)
 
                     tasks = [asyncio.create_task(process_account(account)) for account in accounts]
@@ -120,18 +120,18 @@ async def process():
 
                     for result in results:
                         if isinstance(result, Exception):
-                            logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Error during account processing: {result}{Fore.RESET}")
+                            logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}处理账户时出错: {result}{Fore.RESET}")
 
-                logger.info(f"{Fore.CYAN}00{Fore.RESET} - Preparing to send ping, please wait...")
+                logger.info(f"{Fore.CYAN}00{Fore.RESET} - 准备发送 ping 请求，请稍候...")
                 await asyncio.sleep(3)
 
                 await ping_all_accounts(accounts)
 
             except Exception as e:
-                logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Unexpected error in the main loop: {e}{Fore.RESET}")
+                logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}主循环中出现意外错误: {e}{Fore.RESET}")
 
     except asyncio.CancelledError:
-        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Process interrupted. Cleaning up...{Fore.RESET}")
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}进程中断，正在清理...{Fore.RESET}")
     finally:
-        logger.info(f"{Fore.CYAN}00{Fore.RESET} - Releasing all resources...")
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - 正在释放所有资源...")
         await clean_up_resources()
