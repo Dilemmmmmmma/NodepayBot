@@ -1,4 +1,4 @@
-
+# 仅汉化了日志
 # NodepayBot - Ping Utility
 
 **Nodepay Bot** is an automation tool designed to simplify tasks for Nodepay users. It supports multiple accounts, proxy integration, and automates activities such as account activation, reward claiming, and periodic pings to keep sessions active.
